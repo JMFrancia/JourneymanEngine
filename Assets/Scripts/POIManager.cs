@@ -8,23 +8,53 @@ using Sirenix.OdinInspector;
 [ExecuteInEditMode]
 public class POIManager : MonoBehaviour
 {
-    [OnValueChanged("SetLabel")]
-    [SerializeField] string _name;
+    public string Name => _data.Name;
+
+    [SerializeReference] POIDataSO _data;
     [Header("References")]
-    //[SerializeField] TextMeshProUGUI _label;
-    [SerializeField] GameObject _pathObject;
+    [SerializeField] GameObject _pathObjPrefab;
 
     Dictionary<POIManager, PathController> _pathDict;
 
-    public bool PathExists(POIManager destination) {
+    const string PATH_NAME_TEMPLATE = "{0} <--> {1}";
+
+    private void Awake()
+    {
+        LoadData();
+    }
+
+    Dictionary<POIManager, PathController> LoadPathData()
+    {
+        Dictionary<POIManager, PathController> result = new Dictionary<POIManager, PathController>();
+        for (int n = 0; n < _data.Paths.Count; n++)
+        {
+            if (TryGetPathDestination(_data.Paths[n], out POIManager destination))
+            {
+                result[destination] = _data.Paths[n];
+            }
+        }
+        return result;
+    }
+
+    public bool PathExists(POIManager destination)
+    {
         return _pathDict != null && _pathDict.ContainsKey(destination);
     }
 
-    //public void SetLabel() {
-    //    if (_label == null)
-    //        return;
-    //    _label.text = _name;
-    //}
+    public bool TryGetPath(POIManager destination, out PathController path)
+    {
+        path = null;
+        if (!_pathDict.ContainsKey(destination))
+            return false;
+        path = _pathDict[destination];
+        return true;
+    }
+
+    public POIManager GetRandomDestination()
+    {
+        List<POIManager> destinations = new List<POIManager>(_pathDict.Keys);
+        return destinations[Random.Range(0, destinations.Count)];
+    }
 
     public void OnDrawGizmos()
     {
@@ -34,18 +64,21 @@ public class POIManager : MonoBehaviour
             POIManager poi2 = Selection.gameObjects[1].GetComponent<POIManager>();
             if (poi1 != null && poi2 != null && !poi1.PathExists(poi2))
             {
-               
+
             }
         }
-        if (CanCreatePathWithSelected()) {
+        if (CanCreatePathWithSelected())
+        {
             Gizmos.color = Color.green;
             Gizmos.DrawLine(Selection.transforms[0].position, Selection.transforms[1].position);
         }
         Gizmos.color = Color.magenta;
-        Handles.Label(transform.position + new Vector3(0, 2f, 0), _name);
+        Handles.Label(transform.position + new Vector3(0, 2f, 0), Name);
     }
 
-    public bool TryCreatePathWithSelected() {
+    //Edit mode only
+    public bool TryCreatePathWithSelected()
+    {
         if (CanCreatePathWithSelected())
         {
             POIManager poi1 = Selection.gameObjects[0].GetComponent<POIManager>();
@@ -53,28 +86,53 @@ public class POIManager : MonoBehaviour
             POIManager destination = poi1 == this ? poi2 : poi1;
             return CreatePath(destination);
         }
-        else {
+        else
+        {
             return false;
         }
     }
 
-    public bool CreatePath(POIManager destination) {
-        if (_pathDict == null) {
+    //Edit mode only
+    public bool CreatePath(POIManager destination)
+    {
+        if (_pathDict == null)
+        {
             _pathDict = new Dictionary<POIManager, PathController>();
         }
-        var path = Instantiate(_pathObject).GetComponent<PathController>();
-        path.SetEndPoints(this, destination);
+        var path = Instantiate(_pathObjPrefab).GetComponent<PathController>();
+        path.name = string.Format(PATH_NAME_TEMPLATE, Name, destination.Name);
+        path.Setup(this, destination);
         if (AddPath(path) && destination.AddPath(path))
         {
-            Debug.Log("Successfully added path between " + gameObject + " and " + destination.gameObject);
+            Debug.Log("Successfully added path between " + Name + " and " + destination.Name);
             return true;
         }
-        else {
+        else
+        {
             return false;
         }
     }
 
-    public bool CanCreatePathWithSelected() {
+    void UpdateData()
+    {
+        EditorUtility.SetDirty(_data);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"Data saved for {_data.name}");
+    }
+
+    public void LoadData() {
+        if (_data == null) {
+            Debug.LogError($"Can't load data for {gameObject}, null reference");
+            return;
+        }
+        _pathDict = LoadPathData();
+        gameObject.name = _data.Name;
+        Debug.Log($"Data loaded for {_data.Name}");
+    }
+
+    //Edit mode only
+    public bool CanCreatePathWithSelected()
+    {
         if (Selection.gameObjects.Length == 2)
         {
             POIManager poi1 = Selection.gameObjects[0].GetComponent<POIManager>();
@@ -87,7 +145,26 @@ public class POIManager : MonoBehaviour
         }
     }
 
-    public bool AddPath(PathController path) {
+    //Edit mode only
+    public bool AddPath(PathController path)
+    {
+        if (_data.Paths.Contains(path))
+        {
+            return false;
+        }
+        if (TryGetPathDestination(path, out POIManager destination))
+        {
+            _pathDict.Add(destination, path);
+            _data.Paths.Add(path);
+            UpdateData();
+        }
+        else
+        {
+            Debug.LogWarning($"Attempting to add path {path} to POI {gameObject}, but {gameObject} isn't an endpoint. Endpoints are {path.EndPoint1} and {path.EndPoint2}");
+            return false;
+        }
+        return true;
+        /*
         if (_pathDict == null)
         {
             _pathDict = new Dictionary<POIManager, PathController>();
@@ -101,14 +178,21 @@ public class POIManager : MonoBehaviour
             return false;
         }
         return true;
+        */
     }
 
-    public void RemovePath(POIManager destination) {
-        if(_pathDict != null)
+    //Edit mode only
+    public void RemovePath(POIManager destination)
+    {
+        if (_pathDict != null)
+        {
+            _data.Paths.Remove(_pathDict[destination]);
             _pathDict.Remove(destination);
+        }
     }
 
-    bool TryGetPathDestination(PathController path, out POIManager destination) {
+    bool TryGetPathDestination(PathController path, out POIManager destination)
+    {
         destination = null;
         if (path.EndPoint1 != this && path.EndPoint2 != this)
         {

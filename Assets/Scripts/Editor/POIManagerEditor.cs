@@ -24,12 +24,17 @@ public class POIManagerEditor : Editor
     //[ExecuteAlways]
     //private void OnValidate()
     //{
-    //    (target as POIManager).SetLabel();
+    //    if()
+    //    (target as POIManager).OnDataLoaded();
     //}
 
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
+        DrawDefaultInspector();
+        if (GUILayout.Button("LoadData")) {
+            (target as POIManager).LoadData();
+        }
         if ((target as POIManager).CanCreatePathWithSelected())
         {
             if (GUILayout.Button("Create Path"))

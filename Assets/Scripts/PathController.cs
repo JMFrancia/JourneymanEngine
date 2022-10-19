@@ -4,17 +4,19 @@ using UnityEngine;
 using UnityEditor;
 
 [ExecuteInEditMode]
+[System.Serializable]
 public class PathController : MonoBehaviour
 {
+    //[SerializeField] PathDataSO _data;
     [SerializeField] GameObject _pathPointPrefab;
 
     public POIManager EndPoint1 => _endPoint1;
     public POIManager EndPoint2 => _endPoint2;
     public List<Transform> PathPoints => _pathPoints;
 
-    POIManager _endPoint1;
-    POIManager _endPoint2;
-    List<Transform> _pathPoints;
+    [SerializeField] POIManager _endPoint1;
+    [SerializeField] POIManager _endPoint2;
+    [SerializeField] List<Transform> _pathPoints;
 
     public void Setup(POIManager endPoint1, POIManager endPoint2)
     {
@@ -26,6 +28,7 @@ public class PathController : MonoBehaviour
         };
     }
 
+    //Edit mode only
     public void AddPathPoints() {
         int pathSize = (2 * _pathPoints.Count) - 1;
         Transform lastPoint = _pathPoints[0];
@@ -55,6 +58,7 @@ public class PathController : MonoBehaviour
         _pathPoints = new List<Transform>(newPath);
     }
 
+    //Edit mode only
     Vector3 GetHalfwayPoint(Vector3 p1, Vector3 p2) {
         return (p1 + p2) / 2;
     }

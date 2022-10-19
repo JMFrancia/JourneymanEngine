@@ -6,31 +6,36 @@ using TMPro;
 using Sirenix.OdinInspector;
 
 [ExecuteInEditMode]
+[System.Serializable]
 public class POIManager : MonoBehaviour
 {
-    public string Name => _data.Name;
+    public string Name => gameObject.name;
 
-    [SerializeReference] POIDataSO _data;
+    //[SerializeReference] POIDataSO _data;
     [Header("References")]
     [SerializeField] GameObject _pathObjPrefab;
 
     Dictionary<POIManager, PathController> _pathDict;
 
+    [SerializeField] List<PathController> _paths;
+
     const string PATH_NAME_TEMPLATE = "{0} <--> {1}";
 
     private void Awake()
     {
-        LoadData();
+        //LoadData();
+        _pathDict = LoadPathData();
+        
     }
 
     Dictionary<POIManager, PathController> LoadPathData()
     {
         Dictionary<POIManager, PathController> result = new Dictionary<POIManager, PathController>();
-        for (int n = 0; n < _data.Paths.Count; n++)
+        for (int n = 0; n < _paths.Count; n++)
         {
-            if (TryGetPathDestination(_data.Paths[n], out POIManager destination))
+            if (TryGetPathDestination(_paths[n], out POIManager destination))
             {
-                result[destination] = _data.Paths[n];
+                result[destination] = _paths[n];
             }
         }
         return result;
@@ -113,22 +118,22 @@ public class POIManager : MonoBehaviour
         }
     }
 
-    void UpdateData()
-    {
-        EditorUtility.SetDirty(_data);
-        AssetDatabase.SaveAssets();
-        Debug.Log($"Data saved for {_data.name}");
-    }
+    //void UpdateData()
+    //{
+    //    EditorUtility.SetDirty(_data);
+    //    AssetDatabase.SaveAssets();
+    //    Debug.Log($"Data saved for {_data.name}");
+    //}
 
-    public void LoadData() {
-        if (_data == null) {
-            Debug.LogError($"Can't load data for {gameObject}, null reference");
-            return;
-        }
-        _pathDict = LoadPathData();
-        gameObject.name = _data.Name;
-        Debug.Log($"Data loaded for {_data.Name}");
-    }
+    //public void LoadData() {
+    //    if (_data == null) {
+    //        Debug.LogError($"Can't load data for {gameObject}, null reference");
+    //        return;
+    //    }
+    //    _pathDict = LoadPathData();
+    //    gameObject.name = _data.Name;
+    //    Debug.Log($"Data loaded for {_data.Name}");
+    //}
 
     //Edit mode only
     public bool CanCreatePathWithSelected()
@@ -148,21 +153,23 @@ public class POIManager : MonoBehaviour
     //Edit mode only
     public bool AddPath(PathController path)
     {
-        if (_data.Paths.Contains(path))
+        if (_paths.Contains(path))
         {
             return false;
         }
         if (TryGetPathDestination(path, out POIManager destination))
         {
             _pathDict.Add(destination, path);
-            _data.Paths.Add(path);
-            UpdateData();
+            _paths.Add(path);
+            Debug.Log("Adding path in " + gameObject.name);
         }
         else
         {
             Debug.LogWarning($"Attempting to add path {path} to POI {gameObject}, but {gameObject} isn't an endpoint. Endpoints are {path.EndPoint1} and {path.EndPoint2}");
             return false;
         }
+        EditorUtility.SetDirty(this);
+
         return true;
         /*
         if (_pathDict == null)
@@ -186,7 +193,7 @@ public class POIManager : MonoBehaviour
     {
         if (_pathDict != null)
         {
-            _data.Paths.Remove(_pathDict[destination]);
+            _paths.Remove(_pathDict[destination]);
             _pathDict.Remove(destination);
         }
     }

@@ -32,9 +32,9 @@ public class POIManagerEditor : Editor
     {
         base.OnInspectorGUI();
         DrawDefaultInspector();
-        if (GUILayout.Button("LoadData")) {
-            (target as POIManager).LoadData();
-        }
+        //if (GUILayout.Button("LoadData")) {
+        //    (target as POIManager).LoadData();
+        //}
         if ((target as POIManager).CanCreatePathWithSelected())
         {
             if (GUILayout.Button("Create Path"))

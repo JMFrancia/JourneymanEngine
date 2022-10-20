@@ -10,18 +10,18 @@ public class PathController : MonoBehaviour
     //[SerializeField] PathDataSO _data;
     [SerializeField] GameObject _pathPointPrefab;
 
-    public POIManager EndPoint1 => _endPoint1;
-    public POIManager EndPoint2 => _endPoint2;
+    public POIController EndPoint1 => _endPoint1;
+    public POIController EndPoint2 => _endPoint2;
     public List<Transform> PathPoints => _pathPoints;
 
-    [SerializeField] POIManager _endPoint1;
-    [SerializeField] POIManager _endPoint2;
+    [SerializeField] POIController _endPoint1;
+    [SerializeField] POIController _endPoint2;
     [SerializeField] List<Transform> _pathPoints;
 
-    public void Setup(POIManager endPoint1, POIManager endPoint2)
+    public void Setup(POIPathBuilder endPoint1, POIPathBuilder endPoint2)
     {
-        _endPoint1 = endPoint1;
-        _endPoint2 = endPoint2;
+        _endPoint1 = endPoint1.POI;
+        _endPoint2 = endPoint2.POI;
         _pathPoints = new List<Transform>() {
             _endPoint1.transform,
             _endPoint2.transform
@@ -106,8 +106,8 @@ public class PathController : MonoBehaviour
     }
 
     public void DeletePath() {
-        EndPoint1.RemovePath(EndPoint2);
-        EndPoint2.RemovePath(EndPoint1);
+        EndPoint1.GetComponent<POIPathBuilder>().RemovePath(this);
+        EndPoint2.GetComponent<POIPathBuilder>().RemovePath(this);
         DestroyImmediate(gameObject);
     }
 

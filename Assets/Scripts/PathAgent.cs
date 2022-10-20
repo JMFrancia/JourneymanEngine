@@ -11,7 +11,7 @@ public class PathAgent : MonoBehaviour
 
     
     List<Transform> _route;
-    POIManager _destination;
+    POIController _destination;
     float _pathLength;
     bool _traveling = false;
 
@@ -19,7 +19,7 @@ public class PathAgent : MonoBehaviour
         transform.position = GetClosestPOI().transform.position + new Vector3(0f, _pathYOffset, 0f);
     }
 
-    public void SetDestination(PathController path, POIManager destination) {
+    public void SetDestination(PathController path, POIController destination) {
         if (path.EndPoint1 != destination && path.EndPoint2 != destination) {
             Debug.LogError($"Attempting to set non-existant destination {destination.Name} on path {path.gameObject.name}");
             return;
@@ -61,19 +61,19 @@ public class PathAgent : MonoBehaviour
     }
 
     public void SetRandomDestinationFromNearestPOIAndTravel() {
-        POIManager startingPoint = GetClosestPOI();
+        POIController startingPoint = GetClosestPOI();
         SetRandomDestinationFromStartingPoint(startingPoint);
         StartTravel();
     }
 
-    public void SetRandomDestinationFromStartingPoint(POIManager startingPoint) {
-        POIManager destination = startingPoint.GetRandomDestination();
+    public void SetRandomDestinationFromStartingPoint(POIController startingPoint) {
+        POIController destination = startingPoint.GetRandomDestination();
         startingPoint.TryGetPath(destination, out PathController path);
         SetDestination(path, destination);
     }
 
     //Refactor - this is awful
-    POIManager GetClosestPOI()
+    POIController GetClosestPOI()
     {
         Transform bestTarget = null;
         float closestDistanceSqr = Mathf.Infinity;
@@ -89,6 +89,6 @@ public class PathAgent : MonoBehaviour
                 bestTarget = potentialTarget.transform;
             }
         }
-        return bestTarget.GetComponent<POIManager>();
+        return bestTarget.GetComponent<POIController>();
     }
 }

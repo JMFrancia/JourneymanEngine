@@ -9,6 +9,11 @@ using Sirenix.OdinInspector;
 [System.Serializable]
 public class POIManager : MonoBehaviour
 {
+    public POIDataSO Data => _data;
+
+    [SerializeField]
+    POIDataSO _data;
+
     public string Name => gameObject.name;
 
     //[SerializeReference] POIDataSO _data;
@@ -159,7 +164,6 @@ public class POIManager : MonoBehaviour
         }
         if (TryGetPathDestination(path, out POIManager destination))
         {
-            _pathDict.Add(destination, path);
             _paths.Add(path);
             Debug.Log("Adding path in " + gameObject.name);
         }

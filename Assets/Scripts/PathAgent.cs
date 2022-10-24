@@ -91,8 +91,9 @@ public class PathAgent : MonoBehaviour
     {
         LogTravel($"Path agent {gameObject.name}: \"Travel complete!\"");
         _traveling = false;
-        if (_wanderMode)
-            SetRandomDestinationFromNearestPOIAndTravel();
+        EventManager.TriggerEvent(Constants.Events.DESTINATION_REACHED, _route[_route.Count - 1].gameObject);
+        //if (_wanderMode)
+        //    SetRandomDestinationFromNearestPOIAndTravel();
     }
 
     public void SetRandomDestinationFromNearestPOIAndTravel() {
